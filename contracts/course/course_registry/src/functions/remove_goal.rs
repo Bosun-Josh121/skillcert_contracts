@@ -31,7 +31,6 @@ pub fn remove_goal(env: Env, caller: Address, course_id: String, goal_id: String
 
     // Only course creator or authorized admin can remove goals
     if course.creator != caller {
-        // TODO: Add admin check when admin management is implemented
         handle_error(&env, Error::Unauthorized)
     }
 
@@ -54,7 +53,7 @@ pub fn remove_goal(env: Env, caller: Address, course_id: String, goal_id: String
     // Emits an event for successful goal removal.
     env.events().publish(
         (GOAL_REMOVED_EVENT, course_id.clone(), goal_id.clone()),
-        goal.content.clone(),
+        goal.content_hash.clone(),
     );
 }
 
@@ -74,24 +73,20 @@ mod test {
 
         let creator: Address = Address::generate(&env);
 
-        // Create a course
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
 
-        // Add a goal first
-        let goal_content = String::from_str(&env, "Learn the basics of Rust");
-        let goal = client.add_goal(&creator, &course.id, &goal_content);
+        let goal_content_hash = String::from_str(&env, "sha256_goal_basics_of_rust");
+        let goal = client.add_goal(&creator, &course.id, &goal_content_hash);
 
-        // Remove the goal
         client.remove_goal(&creator, &course.id, &goal.goal_id);
     }
 
@@ -107,24 +102,20 @@ mod test {
         let creator: Address = Address::generate(&env);
         let impostor: Address = Address::generate(&env);
 
-        // Create a course
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
 
-        // Add a goal
-        let goal_content = String::from_str(&env, "Learn the basics of Rust");
-        let goal = client.add_goal(&creator, &course.id, &goal_content);
+        let goal_content_hash = String::from_str(&env, "sha256_goal_basics_of_rust");
+        let goal = client.add_goal(&creator, &course.id, &goal_content_hash);
 
-        // Try to remove the goal as an impostor
         client.remove_goal(&impostor, &course.id, &goal.goal_id);
     }
 
@@ -155,15 +146,13 @@ mod test {
 
         let creator: Address = Address::generate(&env);
 
-        // Create a course
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -183,15 +172,13 @@ mod test {
 
         let creator: Address = Address::generate(&env);
 
-        // Create a course
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -210,34 +197,23 @@ mod test {
 
         let creator: Address = Address::generate(&env);
 
-        // Create a course
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
 
-        // Add multiple goals
-        let goal_content1 = String::from_str(&env, "Learn the basics of Rust");
-        let goal1 = client.add_goal(&creator, &course.id, &goal_content1);
+        let goal1 = client.add_goal(&creator, &course.id, &String::from_str(&env, "sha256_goal1"));
+        let goal2 = client.add_goal(&creator, &course.id, &String::from_str(&env, "sha256_goal2"));
+        let goal3 = client.add_goal(&creator, &course.id, &String::from_str(&env, "sha256_goal3"));
 
-        let goal_content2 = String::from_str(&env, "Understand ownership and borrowing");
-        let goal2 = client.add_goal(&creator, &course.id, &goal_content2);
-
-        let goal_content3 = String::from_str(&env, "Master error handling");
-        let goal3 = client.add_goal(&creator, &course.id, &goal_content3);
-
-        // Remove goals in different order
-        client.remove_goal(&creator, &course.id, &goal2.goal_id); // Remove middle goal
-        client.remove_goal(&creator, &course.id, &goal1.goal_id); // Remove first goal
-        client.remove_goal(&creator, &course.id, &goal3.goal_id); // Remove last goal
-
-        // All goals should be removed successfully
+        client.remove_goal(&creator, &course.id, &goal2.goal_id);
+        client.remove_goal(&creator, &course.id, &goal1.goal_id);
+        client.remove_goal(&creator, &course.id, &goal3.goal_id);
     }
 }

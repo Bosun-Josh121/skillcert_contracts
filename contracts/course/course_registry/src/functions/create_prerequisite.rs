@@ -186,10 +186,9 @@ mod tests {
         
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "Description 1"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000_u128,
-            &None,
             &None,
             &None,
             &None,
@@ -198,10 +197,9 @@ mod tests {
 
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "Description 2"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000_u128,
-            &None,
             &None,
             &None,
             &None,
@@ -228,10 +226,9 @@ mod tests {
         
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "Description 1"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000_u128,
-            &None,
             &None,
             &None,
             &None,
@@ -240,10 +237,9 @@ mod tests {
 
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "Description 2"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000_u128,
-            &None,
             &None,
             &None,
             &None,
@@ -252,10 +248,9 @@ mod tests {
 
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "Description 3"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &1000_u128,
-            &None,
             &None,
             &None,
             &None,

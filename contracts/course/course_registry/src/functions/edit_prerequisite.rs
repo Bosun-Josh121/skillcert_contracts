@@ -161,10 +161,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -172,10 +171,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -183,10 +181,9 @@ mod tests {
         );
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -236,10 +233,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -247,10 +243,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -258,10 +253,9 @@ mod tests {
         );
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -269,10 +263,9 @@ mod tests {
         );
         let course4 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 4"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-004"),
+            &String::from_str(&env, "hash004"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -311,10 +304,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -322,10 +314,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -377,10 +368,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -405,10 +395,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -433,10 +422,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -444,10 +432,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -455,10 +442,9 @@ mod tests {
         );
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -490,10 +476,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -501,10 +486,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -532,7 +516,7 @@ mod tests {
 
         let contract_id = env.register(CourseRegistry, ());
         let client = CourseRegistryClient::new(&env, &contract_id);
-        
+
         // Initialize course rate limiting with permissive settings for testing
         env.as_contract(&contract_id, || {
             use crate::schema::{DataKey, CourseRateLimitConfig};
@@ -547,10 +531,9 @@ mod tests {
         let creator: Address = Address::generate(&env);
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -558,10 +541,9 @@ mod tests {
         );
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -569,10 +551,9 @@ mod tests {
         );
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -580,10 +561,9 @@ mod tests {
         );
         let course4 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 4"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-004"),
+            &String::from_str(&env, "hash004"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -591,10 +571,9 @@ mod tests {
         );
         let course5 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 5"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-005"),
+            &String::from_str(&env, "hash005"),
             &crate::schema::DEFAULT_COURSE_PRICE,
-            &None,
             &None,
             &None,
             &None,
@@ -636,10 +615,9 @@ mod tests {
         
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "Description 1"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -648,10 +626,9 @@ mod tests {
 
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "Description 2"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -678,10 +655,9 @@ mod tests {
         
         let course1 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 1"),
-            &String::from_str(&env, "Description 1"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -690,10 +666,9 @@ mod tests {
 
         let course2 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 2"),
-            &String::from_str(&env, "Description 2"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000,
-            &None,
             &None,
             &None,
             &None,
@@ -702,10 +677,9 @@ mod tests {
 
         let course3 = client.create_course(
             &creator,
-            &String::from_str(&env, "Course 3"),
-            &String::from_str(&env, "Description 3"),
+            &String::from_str(&env, "ref-003"),
+            &String::from_str(&env, "hash003"),
             &1000,
-            &None,
             &None,
             &None,
             &None,

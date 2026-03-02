@@ -14,22 +14,32 @@ pub const MAX_EMPTY_CHECKS: u32 = 10;
 pub const DEFAULT_COURSE_RATE_LIMIT_WINDOW: u64 = 3600; // 1 hour in seconds
 pub const DEFAULT_MAX_COURSE_CREATIONS_PER_WINDOW: u32 = 3; // Max course creations per hour per address
 
+/// Minimal on-chain course module reference.
+///
+/// Only stores the module's ID, course association,
+/// position, a content hash for integrity verification, and a creation timestamp.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CourseModule {
     pub id: String,
     pub course_id: String,
     pub position: u32,
-    pub title: String,
+    /// SHA-256 hash of the off-chain module content (title, body, etc.)
+    pub content_hash: String,
     pub created_at: u64,
 }
 
+/// Minimal on-chain course goal reference.
+///
+/// Only stores the goal's ID, course association,
+/// a content hash for integrity verification, creator, and creation timestamp.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CourseGoal {
     pub goal_id: String,
     pub course_id: String,
-    pub content: String,
+    /// SHA-256 hash of the off-chain goal content
+    pub content_hash: String,
     pub created_by: Address,
     pub created_at: u64,
 }
@@ -83,17 +93,23 @@ pub enum DataKey {
     CourseRateLimit(Address),
 }
 
+/// Lean on-chain course record.
+///
+/// Title, description, and thumbnail_url have been moved off-chain.
+/// The contract stores only data essential for verifiable credentials,
+/// access control, and cryptographic proofs of course content integrity.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Course {
     pub id: String,
-    pub title: String,
-    pub description: String,
+    /// Off-chain reference ID (UUID mapping to full course record in DB)
+    pub off_chain_ref_id: String,
+    /// SHA-256 hash of the off-chain course content (title, description, thumbnail, etc.)
+    pub content_hash: String,
     pub creator: Address,
     pub price: u128,
     pub category: Option<String>,
     pub language: Option<String>,
-    pub thumbnail_url: Option<String>,
     pub published: bool,
     pub prerequisites: Vec<CourseId>,
     pub is_archived: bool,
@@ -119,6 +135,10 @@ pub struct Category {
 // Valid values: "Beginner", "Intermediate", "Advanced"
 pub type CourseLevel = String;
 
+/// Filters for querying courses.
+///
+/// Text search (search_text) removed since title/description are no longer on-chain.
+/// Filtering is now limited to on-chain fields: price, category, level, duration.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CourseFilters {
@@ -128,19 +148,22 @@ pub struct CourseFilters {
     pub level: Option<CourseLevel>,
     pub min_duration: Option<u32>,
     pub max_duration: Option<u32>,
-    /// Text search in course title and description
-    pub search_text: Option<String>,
 }
 
+/// Parameters for editing an existing course.
+///
+/// Title, description, and thumbnail_url fields removed — update these off-chain.
+/// The content_hash and off_chain_ref_id can be updated to reflect off-chain changes.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditCourseParams {
-    pub new_title: Option<String>,
-    pub new_description: Option<String>,
+    /// New content hash (updated when off-chain content changes)
+    pub new_content_hash: Option<String>,
+    /// New off-chain reference ID
+    pub new_off_chain_ref_id: Option<String>,
     pub new_price: Option<u128>,
     pub new_category: Option<Option<String>>,
     pub new_language: Option<Option<String>>,
-    pub new_thumbnail_url: Option<Option<String>>,
     pub new_published: Option<bool>,
     pub new_level: Option<Option<CourseLevel>>,
     pub new_duration_hours: Option<Option<u32>>,

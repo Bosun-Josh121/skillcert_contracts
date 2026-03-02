@@ -20,10 +20,10 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "string": "title"
+                  "string": "ref-001"
                 },
                 {
-                  "string": "description"
+                  "string": "abc123hash"
                 },
                 {
                   "u128": {
@@ -36,9 +36,6 @@
                 },
                 {
                   "string": "language"
-                },
-                {
-                  "string": "thumbnail_url"
                 },
                 "void",
                 "void"
@@ -68,7 +65,7 @@
                   "u32": 0
                 },
                 {
-                  "string": "Module 1 Title"
+                  "string": "module_hash_1"
                 }
               ]
             }
@@ -96,7 +93,7 @@
                   "u32": 1
                 },
                 {
-                  "string": "Module 2 Title"
+                  "string": "module_hash_2"
                 }
               ]
             }
@@ -351,18 +348,18 @@
                     },
                     {
                       "key": {
-                        "symbol": "creator"
+                        "symbol": "content_hash"
                       },
                       "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                        "string": "abc123hash"
                       }
                     },
                     {
                       "key": {
-                        "symbol": "description"
+                        "symbol": "creator"
                       },
                       "val": {
-                        "string": "description"
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                       }
                     },
                     {
@@ -403,6 +400,14 @@
                     },
                     {
                       "key": {
+                        "symbol": "off_chain_ref_id"
+                      },
+                      "val": {
+                        "string": "ref-001"
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "prerequisites"
                       },
                       "val": {
@@ -426,22 +431,6 @@
                       },
                       "val": {
                         "bool": false
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "thumbnail_url"
-                      },
-                      "val": {
-                        "string": "thumbnail_url"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "title"
-                      },
-                      "val": {
-                        "string": "title"
                       }
                     }
                   ]
@@ -541,51 +530,6 @@
                     },
                     {
                       "u32": 1
-                    }
-                  ]
-                },
-                "durability": "persistent",
-                "val": {
-                  "bool": true
-                }
-              }
-            },
-            "ext": "v0"
-          },
-          4095
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-            "key": {
-              "vec": [
-                {
-                  "symbol": "title"
-                },
-                {
-                  "string": "title"
-                }
-              ]
-            },
-            "durability": "persistent"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-                "key": {
-                  "vec": [
-                    {
-                      "symbol": "title"
-                    },
-                    {
-                      "string": "title"
                     }
                   ]
                 },

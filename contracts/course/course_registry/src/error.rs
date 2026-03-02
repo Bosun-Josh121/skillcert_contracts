@@ -13,10 +13,9 @@ pub enum Error {
     OnlyCreatorCanArchive = 4,
     CourseAlreadyArchived = 5,
     Unauthorized = 6,
+    /// Category name is required (used by create_course_category)
     NameRequired = 7,
-    EmptyCourseTitle = 8,
     InvalidPrice = 9,
-    DuplicateCourseTitle = 10,
     DuplicateCourseId = 11,
     OnlyCreatorCanEditPrereqs = 12,
     PrereqCourseNotFound = 13,
@@ -31,18 +30,13 @@ pub enum Error {
     UnauthorizedCaller = 401,
     UnauthorizedCourseAccess = 402,
     InvalidAdminOperation = 403,
-    EmptyModuleTitle = 404,
     DuplicateModulePosition = 405,
     EmptyModuleId = 22,
     PrereqNotInList = 23,
     InvalidModulePosition = 24,
-    InvalidModuleTitle = 25,
-    InvalidCourseDescription = 26,
     InvalidCategoryName = 27,
     EmptyCategory = 28,
-    InvalidTitleLength = 29,
     InvalidLanguageLength = 43,
-    InvalidThumbnailUrlLength = 44,
     InvalidDurationValue = 45,
     InvalidLimitValue = 46,
     InvalidOffsetValue = 47,
@@ -58,6 +52,10 @@ pub enum Error {
     // Rate limiting errors
     CourseRateLimitExceeded = 57,
     CourseRateLimitNotConfigured = 58,
+    /// Content hash is required for on-chain integrity verification
+    ContentHashRequired = 59,
+    /// Off-chain reference ID is required
+    OffChainRefIdRequired = 60,
 }
 
 pub fn handle_error(env: &Env, error: Error) -> ! {

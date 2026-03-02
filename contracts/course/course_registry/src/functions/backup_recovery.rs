@@ -79,7 +79,7 @@ pub fn export_course_data(env: Env, caller: Address) -> CourseBackupData {
                 id: module_id.clone(),
                 course_id: course.id.clone(),
                 position: 1,
-                title: String::from_str(&env, "Default Module"),
+                content_hash: String::from_str(&env, "default_content_hash"),
                 created_at: env.ledger().timestamp(),
             };
             modules.set(module_id, course_module);

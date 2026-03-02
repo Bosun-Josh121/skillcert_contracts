@@ -43,17 +43,16 @@ mod test {
     fn create_course<'a>(
         client: &CourseRegistryClient<'a>,
         creator: &Address,
-        title: &str,
+        ref_id: &str,
     ) -> Course {
-        let title = String::from_str(&client.env, title);
-        let description = String::from_str(&client.env, "description");
+        let off_chain_ref_id = String::from_str(&client.env, ref_id);
+        let content_hash = String::from_str(&client.env, "abc123hash");
         let price = 1000_u128;
         client.create_course(
             &creator,
-            &title,
-            &description,
+            &off_chain_ref_id,
+            &content_hash,
             &price,
-            &None,
             &None,
             &None,
             &None,
@@ -72,9 +71,9 @@ mod test {
         let instructor1 = Address::generate(&env);
         let instructor2 = Address::generate(&env);
 
-        let course1 = create_course(&client, &instructor1, "course1");
-        let course2 = create_course(&client, &instructor2, "course2");
-        let course3 = create_course(&client, &instructor1, "course3");
+        let course1 = create_course(&client, &instructor1, "ref-001");
+        let course2 = create_course(&client, &instructor2, "ref-002");
+        let course3 = create_course(&client, &instructor1, "ref-003");
 
         let instructor1_courses = client.get_courses_by_instructor(&instructor1);
         assert_eq!(instructor1_courses.len(), 2);
@@ -110,8 +109,8 @@ mod test {
 
         let instructor = Address::generate(&env);
 
-        let course1 = create_course(&client, &instructor, "course1");
-        let course2 = create_course(&client, &instructor, "course2");
+        let course1 = create_course(&client, &instructor, "ref-001");
+        let course2 = create_course(&client, &instructor, "ref-002");
 
         client.archive_course(&instructor, &course2.id);
         let courses = client.get_courses_by_instructor(&instructor);

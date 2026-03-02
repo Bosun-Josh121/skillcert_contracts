@@ -21,7 +21,7 @@ mod user_management {
             // For testing, always return true to simplify admin checks
             true
         }
-        pub fn save_user_profile(_env: Env, _user: Address, _name: String, _email: String) {
+        pub fn save_user_profile(_env: Env, _off_chain_ref_id: String) {
             // Mock implementation
         }
         pub fn is_course_creator(_env: Env, _course_id: String, _user: Address) -> bool {

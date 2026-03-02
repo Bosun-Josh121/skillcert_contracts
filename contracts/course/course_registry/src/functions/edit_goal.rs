@@ -5,19 +5,22 @@ use soroban_sdk::{symbol_short, Address, Env, String, Symbol};
 
 use crate::functions::is_course_creator::is_course_creator;
 use crate::error::{handle_error, Error};
-use crate::functions::utils::trim;
 use crate::schema::{Course, CourseGoal, DataKey};
 
 const COURSE_KEY: Symbol = symbol_short!("course");
 
 const GOAL_EDITED_EVENT: Symbol = symbol_short!("goalEdit");
 
+/// Edit a goal's content hash.
+///
+/// This function updates the content_hash
+/// on-chain to reflect changes made to the off-chain goal content.
 pub fn edit_goal(
     env: Env,
     creator: Address,
     course_id: String,
     goal_id: String,
-    new_content: String,
+    new_content_hash: String,
 ) -> CourseGoal {
     creator.require_auth();
     // Validate input
@@ -27,8 +30,8 @@ pub fn edit_goal(
     if goal_id.is_empty() {
         handle_error(&env, Error::EmptyGoalId)
     }
-    // Validate goal content - prevent empty or whitespace-only content
-    if new_content.is_empty() || trim(&env, &new_content).is_empty() {
+    // Validate new content hash is provided
+    if new_content_hash.is_empty() {
         handle_error(&env, Error::EmptyNewGoalContent);
     }
 
@@ -52,8 +55,8 @@ pub fn edit_goal(
         .get(&goal_key)
         .expect("Goal not found");
 
-    // Update goal content
-    goal.content = new_content.clone();
+    // Update goal content hash
+    goal.content_hash = new_content_hash.clone();
 
     // Save updated goal
     env.storage().persistent().set(&goal_key, &goal);
@@ -61,7 +64,7 @@ pub fn edit_goal(
     // Emit event
     env.events().publish(
         (GOAL_EDITED_EVENT, course_id.clone(), goal_id.clone()),
-        new_content.clone(),
+        new_content_hash.clone(),
     );
 
     goal
@@ -80,18 +83,17 @@ mod test {
     ) -> (Course, String) {
         let course: Course = client.create_course(
             creator,
-            &String::from_str(env, "Test Course"),
-            &String::from_str(env, "Test Description"),
+            &String::from_str(env, "test_ref_001"),
+            &String::from_str(env, "hash_original_aabbccddeeff112233"),
             &1000_u128,
             &Some(String::from_str(env, "category")),
             &Some(String::from_str(env, "language")),
-            &Some(String::from_str(env, "thumbnail_url")),
             &None,
             &None,
         );
 
-        let goal_content = String::from_str(env, "Learn the basics of Rust");
-        let goal = client.add_goal(creator, &course.id, &goal_content);
+        let content_hash = String::from_str(env, "goal_hash_aabbccddeeff11223344");
+        let goal = client.add_goal(creator, &course.id, &content_hash);
 
         (course, goal.goal_id)
     }
@@ -103,25 +105,25 @@ mod test {
         let creator: Address = Address::generate(&env);
         let contract_id = env.register(CourseRegistry, {});
         let client = CourseRegistryClient::new(&env, &contract_id);
-        // Setup course and goal, this will create a new Course and CourseGoal in storage
+
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "Test Course"),
-            &String::from_str(&env, "Test Description"),
+            &String::from_str(&env, "test_ref_001"),
+            &String::from_str(&env, "hash_original_aabbccddeeff112233"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
-        let goal_content = String::from_str(&env, "Learn the basics of Rust");
-        // The `add_goal` function should return the newly created CourseGoal
-        let goal = client.add_goal(&creator, &course.id, &goal_content);
-        let updated_content = String::from_str(&env, "Master advanced Rust");
-        // Use the 'goal.id' which is a Soroban String representing the UUID
-        let edited_goal = client.edit_goal(&creator, &course.id, &goal.goal_id, &updated_content);
-        assert_eq!(edited_goal.content, updated_content);
+
+        let initial_hash = String::from_str(&env, "goal_hash_aabbccddeeff11223344");
+        let goal = client.add_goal(&creator, &course.id, &initial_hash);
+
+        let updated_hash = String::from_str(&env, "goal_hash_updated_ffeeddccbb5544");
+        let edited_goal = client.edit_goal(&creator, &course.id, &goal.goal_id, &updated_hash);
+
+        assert_eq!(edited_goal.content_hash, updated_hash);
         assert_eq!(edited_goal.course_id, course.id);
         assert_eq!(edited_goal.created_by, creator);
     }
@@ -135,24 +137,22 @@ mod test {
         let impostor: Address = Address::generate(&env);
 
         let contract_id = env.register(CourseRegistry, {});
-
         let client = CourseRegistryClient::new(&env, &contract_id);
 
         let (course, goal_id) = setup_course_and_goal(&env, &client, &creator);
 
-        let updated_content = String::from_str(&env, "Updated content");
-        client.edit_goal(&impostor, &course.id, &goal_id, &updated_content);
+        let updated_hash = String::from_str(&env, "hacked_hash_ffeeddccbb5544aabb");
+        client.edit_goal(&impostor, &course.id, &goal_id, &updated_hash);
     }
 
     #[test]
     #[should_panic(expected = "HostError: Error(Contract, #18)")]
-    fn test_edit_goal_empty_content() {
+    fn test_edit_goal_empty_content_hash() {
         let env = Env::default();
         env.mock_all_auths();
         let creator: Address = Address::generate(&env);
 
         let contract_id = env.register(CourseRegistry, {});
-
         let client = CourseRegistryClient::new(&env, &contract_id);
 
         let (course, goal_id) = setup_course_and_goal(&env, &client, &creator);
@@ -174,7 +174,7 @@ mod test {
             &creator,
             &String::from_str(&env, "nonexistent_course"),
             &String::from_str(&env, "goal1"),
-            &String::from_str(&env, "Some content"),
+            &String::from_str(&env, "hash_some_aabbccddeeff11223344"),
         );
     }
 
@@ -186,7 +186,6 @@ mod test {
         let creator: Address = Address::generate(&env);
 
         let contract_id = env.register(CourseRegistry, {});
-
         let client = CourseRegistryClient::new(&env, &contract_id);
 
         let (course, _goal_id) = setup_course_and_goal(&env, &client, &creator);
@@ -195,7 +194,7 @@ mod test {
             &creator,
             &course.id,
             &String::from_str(&env, "nonexistent_goal"),
-            &String::from_str(&env, "Some content"),
+            &String::from_str(&env, "hash_some_aabbccddeeff11223344"),
         );
     }
 }

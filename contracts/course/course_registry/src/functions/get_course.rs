@@ -79,15 +79,14 @@ mod test {
     }
 
     fn create_course<'a>(client: &CourseRegistryClient<'a>, creator: &Address) -> Course {
-        let title = String::from_str(&client.env, "title");
-        let description = String::from_str(&client.env, "description");
+        let off_chain_ref_id = String::from_str(&client.env, "ref-001");
+        let content_hash = String::from_str(&client.env, "abc123hash");
         let price = 1000_u128;
         client.create_course(
             &creator,
-            &title,
-            &description,
+            &off_chain_ref_id,
+            &content_hash,
             &price,
-            &None,
             &None,
             &None,
             &None,

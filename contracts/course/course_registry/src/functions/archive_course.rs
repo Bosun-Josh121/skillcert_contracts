@@ -55,12 +55,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -104,12 +103,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -130,12 +128,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -158,12 +155,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );

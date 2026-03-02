@@ -21,85 +21,34 @@ use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
 /// Course Registry Contract
 ///
 /// This contract manages the creation, modification, and querying of courses
-/// in the SkillCert platform. It handles course metadata, categories, modules,
-/// goals, prerequisites, and provides comprehensive course management functionality.
+/// in the SkillCert platform. It stores only lean on-chain data essential for
+/// verifiable credentials and cryptographic proofs. All descriptive content
+/// (titles, descriptions, thumbnails) is stored off-chain.
 #[contract]
 pub struct CourseRegistry;
 
 #[contractimpl]
 impl CourseRegistry {
     /// Create a new course in the registry.
-    ///
-    /// This function creates a new course with the specified metadata and
-    /// returns the created course object with a unique identifier.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `title` - The course title
-    /// * `description` - The course description
-    /// * `price` - The course price in the platform's currency
-    /// * `category` - Optional course category
-    /// * `language` - Optional course language
-    /// * `thumbnail_url` - Optional URL for the course thumbnail image
-    /// * `level` - Optional course difficulty level
-    /// * `duration_hours` - Optional estimated duration in hours
-    ///
-    /// # Returns
-    ///
-    /// Returns the created `Course` object with all metadata and a unique ID.
-    ///
-    /// # Panics
-    ///
-    /// * If title or description are empty
-    /// * If creator address is invalid
-    /// * If price exceeds maximum allowed value
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let course = contract.create_course(
-    ///     env.clone(),
-    ///     instructor_address,
-    ///     "Rust Programming Basics".try_into().unwrap(),
-    ///     "Learn Rust from scratch".try_into().unwrap(),
-    ///     5000, // price in platform currency
-    ///     Some("Programming".try_into().unwrap()),
-    ///     Some("en".try_into().unwrap()),
-    ///     Some("https://example.com/thumb.jpg".try_into().unwrap()),
-    ///     Some(CourseLevel::Beginner),
-    ///     Some(40)
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Empty strings**: Title and description cannot be empty
-    /// * **Large prices**: Price must be within reasonable bounds
-    /// * **Invalid URLs**: Thumbnail URL should be valid if provided
-    /// * **Auto-generated ID**: Course ID is automatically generated
     pub fn create_course(
         env: Env,
         creator: Address,
-        title: String,
-        description: String,
+        off_chain_ref_id: String,
+        content_hash: String,
         price: u128,
         category: Option<String>,
         language: Option<String>,
-        thumbnail_url: Option<String>,
         level: Option<CourseLevel>,
         duration_hours: Option<u32>,
     ) -> Course {
         functions::create_course::create_course(
             env,
             creator,
-            title,
-            description,
+            off_chain_ref_id,
+            content_hash,
             price,
             category,
             language,
-            thumbnail_url,
             level,
             duration_hours,
         )
@@ -343,9 +292,9 @@ impl CourseRegistry {
         caller: Address,
         course_id: String,
         position: u32,
-        title: String,
+        content_hash: String,
     ) -> CourseModule {
-        functions::add_module::course_registry_add_module(env, caller, course_id, position, title)
+        functions::add_module::course_registry_add_module(env, caller, course_id, position, content_hash)
     }
 
     /// Delete a course from the registry.
@@ -462,52 +411,14 @@ impl CourseRegistry {
         creator: Address,
         course_id: String,
         goal_id: String,
-        new_content: String,
+        new_content_hash: String,
     ) -> CourseGoal {
-        functions::edit_goal::edit_goal(env, creator, course_id, goal_id, new_content)
+        functions::edit_goal::edit_goal(env, creator, course_id, goal_id, new_content_hash)
     }
 
     /// Add a new goal to a course.
-    ///
-    /// This function creates and adds a new learning goal to the specified course.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course
-    /// * `content` - The content/description of the goal
-    ///
-    /// # Returns
-    ///
-    /// Returns the created `CourseGoal` object.
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If content is empty
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// // Add a learning goal to a course
-    /// let goal = contract.add_goal(
-    ///     env.clone(),
-    ///     course_creator_address,
-    ///     "course_123".try_into().unwrap(),
-    ///     "Students will learn basic programming concepts".try_into().unwrap()
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Empty content**: Goal content cannot be empty
-    /// * **Creator only**: Only course creator can add goals
-    /// * **Auto-generated ID**: Goal gets unique auto-generated ID
-    /// * **Content validation**: Goal content must meet validation requirements
-    pub fn add_goal(env: Env, creator: Address, course_id: String, content: String) -> CourseGoal {
-        functions::add_goal::add_goal(env, creator, course_id, content)
+    pub fn add_goal(env: Env, creator: Address, course_id: String, content_hash: String) -> CourseGoal {
+        functions::add_goal::add_goal(env, creator, course_id, content_hash)
     }
 
     /// Remove a goal from a course.
@@ -549,206 +460,7 @@ impl CourseRegistry {
         functions::remove_goal::remove_goal(env, caller, course_id, goal_id)
     }
 
-    /// Add prerequisites to a course.
-    ///
-    /// This function adds prerequisite courses that must be completed
-    /// before a student can enroll in the target course.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course
-    /// * `prerequisite_course_ids` - Vector of course IDs that are prerequisites
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If any prerequisite course doesn't exist
-    /// * If trying to add self as prerequisite
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let mut prerequisites = Vec::new(&env);
-    /// prerequisites.push_back("basic_rust".try_into().unwrap());
-    /// prerequisites.push_back("programming_fundamentals".try_into().unwrap());
-    /// 
-    /// contract.add_prerequisite(
-    ///     env.clone(),
-    ///     course_creator_address,
-    ///     "advanced_rust".try_into().unwrap(),
-    ///     prerequisites
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Circular dependencies**: Cannot add self as prerequisite
-    /// * **Non-existent courses**: All prerequisite courses must exist
-    /// * **Creator only**: Only course creator can add prerequisites
-    /// * **Duplicate prerequisites**: Adding same prerequisite multiple times is ignored
-    pub fn add_prerequisite(
-        env: Env,
-        creator: Address,
-        course_id: String,
-        prerequisite_course_ids: Vec<String>,
-    ) {
-        functions::create_prerequisite::add_prerequisite(
-            env,
-            creator,
-            course_id,
-            prerequisite_course_ids,
-        )
-    }
-
-    /// Remove a prerequisite from a course.
-    ///
-    /// This function removes a specific prerequisite course requirement
-    /// from the target course.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course
-    /// * `prerequisite_course_id` - The ID of the prerequisite course to remove
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If prerequisite doesn't exist for the course
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// // Remove a prerequisite from a course
-    /// contract.remove_prerequisite(
-    ///     env.clone(),
-    ///     course_creator_address,
-    ///     "advanced_rust".try_into().unwrap(),
-    ///     "basic_rust".try_into().unwrap()
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Non-existent prerequisite**: Will panic if prerequisite doesn't exist
-    /// * **Creator only**: Only course creator can remove prerequisites
-    /// * **No effect**: Removing non-existent prerequisite has no effect
-    /// * **Student impact**: Consider impact on enrolled students
-    pub fn remove_prerequisite(
-        env: Env,
-        creator: Address,
-        course_id: String,
-        prerequisite_course_id: String,
-    ) {
-        functions::remove_prerequisite::remove_prerequisite(
-            env,
-            creator,
-            course_id,
-            prerequisite_course_id,
-        )
-    }
-
-    /// Edit the prerequisites for a course.
-    ///
-    /// This function replaces all existing prerequisites with a new set
-    /// of prerequisite courses.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course
-    /// * `new_prerequisites` - Vector of new prerequisite course IDs
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If any prerequisite course doesn't exist
-    /// * If trying to add self as prerequisite
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let mut new_prerequisites = Vec::new(&env);
-    /// new_prerequisites.push_back("updated_course_1".try_into().unwrap());
-    /// new_prerequisites.push_back("updated_course_2".try_into().unwrap());
-    /// 
-    /// contract.edit_prerequisite(
-    ///     env.clone(),
-    ///     course_creator_address,
-    ///     "target_course".try_into().unwrap(),
-    ///     new_prerequisites
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Complete replacement**: All old prerequisites are removed
-    /// * **Empty vector**: Can clear all prerequisites with empty vector
-    /// * **Circular dependencies**: Cannot add self as prerequisite
-    /// * **Student impact**: Consider impact on enrolled students
-    pub fn edit_prerequisite(
-        env: Env,
-        creator: Address,
-        course_id: String,
-        new_prerequisites: Vec<String>,
-    ) {
-        functions::edit_prerequisite::edit_prerequisite(env, creator, course_id, new_prerequisites)
-    }
-
-    /// Edit course information.
-    ///
-    /// This function allows the course creator to update various aspects
-    /// of the course using the provided parameters.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course to edit
-    /// * `params` - Parameters containing the fields to update
-    ///
-    /// # Returns
-    ///
-    /// Returns the updated `Course` object.
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If any field validation fails
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let params = EditCourseParams {
-    ///     title: Some("Updated Course Title".try_into().unwrap()),
-    ///     description: Some("Updated description".try_into().unwrap()),
-    ///     price: Some(7500),
-    ///     level: Some(CourseLevel::Intermediate),
-    ///     ..Default::default()
-    /// };
-    /// 
-    /// let updated_course = contract.edit_course(
-    ///     env.clone(),
-    ///     course_creator_address,
-    ///     "course_123".try_into().unwrap(),
-    ///     params
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Partial updates**: Only provided fields are updated
-    /// * **Validation**: All fields must pass validation rules
-    /// * **Creator only**: Only course creator can edit course
-    /// * **Price limits**: Price must be within allowed bounds
+    /// Edit an existing course.
     pub fn edit_course(
         env: Env,
         creator: Address,
@@ -760,85 +472,12 @@ impl CourseRegistry {
 
     /// Archive a course.
     ///
-    /// This function marks a course as archived, making it unavailable for new enrollments
-    /// while preserving existing data and access for current students.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `creator` - The address of the course creator
-    /// * `course_id` - The unique identifier of the course to archive
-    ///
-    /// # Returns
-    ///
-    /// Returns the updated `Course` object with archived status.
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    /// * If creator is not the course creator
-    /// * If course is already archived
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// // Archive a course
-    /// let archived_course = contract.archive_course(
-    ///     &env,
-    ///     course_creator_address,
-    ///     "course_123".try_into().unwrap()
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Already archived**: Will panic if course is already archived
-    /// * **Creator only**: Only course creator can archive course
-    /// * **Student access**: Current students retain access
-    /// * **Reversible**: Course can be unarchived if needed
-    pub fn archive_course(env: &Env, creator: Address, course_id: String) -> Course {
-        functions::archive_course::archive_course(env, creator, course_id)
+    /// Returns the archived `Course` with `is_archived` set to `true`.
+    pub fn archive_course(env: Env, creator: Address, course_id: String) -> Course {
+        functions::archive_course::archive_course(&env, creator, course_id)
     }
 
-    /// Check if a user is the creator of a specific course.
-    ///
-    /// This function verifies whether the specified user is the original creator
-    /// of the given course.
-    ///
-    /// # Arguments
-    ///
-    /// * `env` - The Soroban environment
-    /// * `course_id` - The unique identifier of the course
-    /// * `user` - The address of the user to check
-    ///
-    /// # Returns
-    ///
-    /// Returns `true` if the user is the course creator, `false` otherwise.
-    ///
-    /// # Panics
-    ///
-    /// * If course doesn't exist
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// // Check if user is course creator
-    /// let is_creator = contract.is_course_creator(
-    ///     &env,
-    ///     "course_123".try_into().unwrap(),
-    ///     user_address
-    /// );
-    /// 
-    /// if is_creator {
-    ///     // User can edit this course
-    /// }
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Non-existent course**: Will panic if course doesn't exist
-    /// * **Public access**: Anyone can check creator status
-    /// * **Creator verification**: Useful for permission checks
+    /// Check if a user is the course creator.
     pub fn is_course_creator(env: &Env, course_id: String, user: Address) -> bool {
         functions::is_course_creator::is_course_creator(env, course_id, user)
     }
@@ -928,6 +567,46 @@ impl CourseRegistry {
         functions::list_courses_with_filters::list_courses_with_filters(
             &env, filters, limit, offset,
         )
+    }
+
+    /// List modules for a course.
+    pub fn list_modules(env: Env, course_id: String) -> Vec<CourseModule> {
+        functions::list_modules::list_modules(&env, course_id)
+    }
+
+    /// Add prerequisites to a course.
+    pub fn add_prerequisite(
+        env: Env,
+        caller: Address,
+        course_id: String,
+        prerequisites: Vec<String>,
+    ) {
+        functions::create_prerequisite::add_prerequisite(env, caller, course_id, prerequisites)
+    }
+
+    /// Edit (replace) all prerequisites for a course.
+    pub fn edit_prerequisite(
+        env: Env,
+        caller: Address,
+        course_id: String,
+        new_prerequisites: Vec<String>,
+    ) {
+        functions::edit_prerequisite::edit_prerequisite(env, caller, course_id, new_prerequisites)
+    }
+
+    /// Remove a prerequisite from a course.
+    pub fn remove_prerequisite(
+        env: Env,
+        caller: Address,
+        course_id: String,
+        prereq_course_id: String,
+    ) {
+        functions::remove_prerequisite::remove_prerequisite(env, caller, course_id, prereq_course_id)
+    }
+
+    /// Get prerequisites for a course.
+    pub fn get_prerequisites_by_course(env: Env, course_id: String) -> Vec<crate::schema::CourseId> {
+        functions::get_prerequisites_by_course::get_prerequisites_by_course(&env, course_id)
     }
 
     /// Export all course data for backup purposes (admin only)

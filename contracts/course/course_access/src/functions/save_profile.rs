@@ -9,33 +9,28 @@ use crate::schema::{DataKey, UserProfile};
 const SAVE_USER_PROFILE_EVENT: Symbol = symbol_short!("saveUsPrl");
 
 
+/// Save a minimal on-chain user profile.
+///
+/// Stores only the user's address and an off-chain reference ID.
+/// All PII (name, email, profession, goals, country) is stored off-chain.
+///
+/// # Arguments
+/// * `env` - Soroban environment
+/// * `off_chain_ref_id` - UUID/hash mapping to the user's full record in the off-chain DB
+/// * `user` - The user's blockchain address
 pub fn save_user_profile(
     env: Env,
-    name: String,
-    email: String,
-    profession: Option<String>,
-    goals: Option<String>,
-    country: String,
+    off_chain_ref_id: String,
     user: Address,
 ) {
-    // Validate required fields
-    if name.is_empty() {
-        handle_error(&env, Error::NameRequired)
-    }
-    // TODO: Implement full email validation according to RFC 5322 standard
-    if email.is_empty() {
-        handle_error(&env, Error::EmailRequired)
-    }
-    if country.is_empty() {
-        handle_error(&env, Error::CountryRequired)
+    // Validate required field
+    if off_chain_ref_id.is_empty() {
+        handle_error(&env, Error::OffChainRefIdRequired)
     }
 
     let profile: UserProfile = UserProfile {
-        name: name.clone(),
-        email: email.clone(),
-        profession: profession.clone(),
-        goals: goals.clone(),
-        country: country.clone(),
+        user: user.clone(),
+        off_chain_ref_id: off_chain_ref_id.clone(),
     };
 
     env.storage()
@@ -43,5 +38,5 @@ pub fn save_user_profile(
         .set(&DataKey::UserProfile(user.clone()), &profile);
 
     env.events()
-        .publish((SAVE_USER_PROFILE_EVENT,), (name, email, profession, goals, country, user));
+        .publish((SAVE_USER_PROFILE_EVENT,), (user, off_chain_ref_id));
 }

@@ -62,13 +62,11 @@ mod tests {
         let env = Env::default();
         env.mock_all_auths();
 
-        // Register mock user management contract
         let user_mgmt_id = env.register(mock_user_management::UserManagement, ());
 
         let contract_id = env.register(CourseRegistry, ());
         let client = CourseRegistryClient::new(&env, &contract_id);
 
-        // Setup admin
         let admin = Address::generate(&env);
         env.as_contract(&contract_id, || {
             crate::functions::access_control::initialize(&env, &admin, &user_mgmt_id);
@@ -84,12 +82,11 @@ mod tests {
         let creator = Address::generate(&env);
         let course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -97,7 +94,7 @@ mod tests {
             &creator,
             &course.id,
             &0,
-            &String::from_str(&env, "Module Title"),
+            &String::from_str(&env, "module_content_hash_001"),
         );
 
         let exists: bool = env.as_contract(&contract_id, || {
@@ -140,3 +137,4 @@ mod tests {
         client.remove_module(&String::from_str(&env, "non_existent_module"));
     }
 }
+

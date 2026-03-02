@@ -6,7 +6,7 @@ use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env, String, V
 
 use crate::{
     functions::{
-        get_prerequisites_by_course::get_prerequisites_by_course_id,
+        get_prerequisites_by_course::get_prerequisites_by_course,
         list_categories::list_categories,
     },
     schema::Course,
@@ -53,16 +53,15 @@ fn test_remove_module_success() {
     let creator = Address::generate(&env);
     let course: Course = client.create_course(
         &creator,
-        &String::from_str(&env, "title"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &1000_u128,
         &Some(String::from_str(&env, "category")),
         &Some(String::from_str(&env, "language")),
-        &Some(String::from_str(&env, "thumbnail_url")),
         &None,
         &None,
     );
-    let new_module = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "Module Title"));
+    let new_module = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "module_content_hash_1"));
 
     let exists: bool = env.as_contract(&contract_id, || {
         env.storage()
@@ -87,17 +86,16 @@ fn test_remove_multiple_different_modules() {
     let creator = Address::generate(&env);
     let course: Course = client.create_course(
         &creator,
-        &String::from_str(&env, "title"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &1000_u128,
         &Some(String::from_str(&env, "category")),
         &Some(String::from_str(&env, "language")),
-        &Some(String::from_str(&env, "thumbnail_url")),
         &None,
         &None,
     );
-    let module1 = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "Module 1 Title"));
-    let module2 = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 2 Title"));
+    let module1 = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "module_hash_1"));
+    let module2 = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "module_hash_2"));
 
     client.remove_module(&module1.id.clone());
     client.remove_module(&module2.id.clone());
@@ -124,17 +122,16 @@ fn test_remove_module_storage_isolation() {
     let creator = Address::generate(&env);
     let course: Course = client.create_course(
         &creator,
-        &String::from_str(&env, "title"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &1000_u128,
         &Some(String::from_str(&env, "category")),
         &Some(String::from_str(&env, "language")),
-        &Some(String::from_str(&env, "thumbnail_url")),
         &None,
         &None,
     );
-    let module1 = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "Module 1 Title"));
-    let module2 = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 2 Title"));
+    let module1 = client.add_module(&creator, &course.id, &0, &String::from_str(&env, "module_hash_1"));
+    let module2 = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "module_hash_2"));
 
     client.remove_module(&module1.id.clone());
 
@@ -164,10 +161,9 @@ fn test_get_course_success() {
     let creator: Address = Address::generate(&env);
     let course = client.create_course(
         &creator,
-        &String::from_str(&env, "Course 1"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &crate::schema::DEFAULT_COURSE_PRICE,
-        &None,
         &None,
         &None,
         &None,
@@ -177,8 +173,8 @@ fn test_get_course_success() {
     let retrieved = client.get_course(&course.id);
 
     assert_eq!(retrieved.id, course.id);
-    assert_eq!(retrieved.title, course.title);
-    assert_eq!(retrieved.description, course.description);
+    assert_eq!(retrieved.off_chain_ref_id, course.off_chain_ref_id);
+    assert_eq!(retrieved.content_hash, course.content_hash);
     assert_eq!(retrieved.creator, course.creator);
     assert_eq!(retrieved.published, course.published);
 }
@@ -220,10 +216,9 @@ fn test_get_courses_by_instructor_found() {
     let creator: Address = Address::generate(&env);
     let course = client.create_course(
         &creator,
-        &String::from_str(&env, "Course 1"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &crate::schema::DEFAULT_COURSE_PRICE,
-        &None,
         &None,
         &None,
         &None,
@@ -247,10 +242,9 @@ fn test_get_prerequisites_by_course_id() {
     let creator: Address = Address::generate(&env);
     let course = client.create_course(
         &creator,
-        &String::from_str(&env, "Course 1"),
-        &String::from_str(&env, "description"),
+        &String::from_str(&env, "ref-001"),
+        &String::from_str(&env, "abc123hash"),
         &crate::schema::DEFAULT_COURSE_PRICE,
-        &None,
         &None,
         &None,
         &None,
@@ -258,7 +252,7 @@ fn test_get_prerequisites_by_course_id() {
     );
 
     let prerequisites = env.as_contract(&contract_id, || {
-        get_prerequisites_by_course_id(&env, course.id.clone())
+        get_prerequisites_by_course(&env, course.id.clone())
     });
     assert!(prerequisites.is_empty());
 }
@@ -274,33 +268,30 @@ fn test_list_categories_counts() {
 
     client.create_course(
         &creator,
-        &String::from_str(&env, "A"),
-        &String::from_str(&env, "d"),
+        &String::from_str(&env, "ref-A"),
+        &String::from_str(&env, "hashA"),
         &10,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
     );
     client.create_course(
         &creator,
-        &String::from_str(&env, "B"),
-        &String::from_str(&env, "d"),
+        &String::from_str(&env, "ref-B"),
+        &String::from_str(&env, "hashB"),
         &10,
         &Some(String::from_str(&env, "Data")),
         &None,
         &None,
         &None,
-        &None,
     );
     client.create_course(
         &creator,
-        &String::from_str(&env, "C"),
-        &String::from_str(&env, "d"),
+        &String::from_str(&env, "ref-C"),
+        &String::from_str(&env, "hashC"),
         &10,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
@@ -346,11 +337,10 @@ fn test_list_categories_ignores_none() {
 
     client.create_course(
         &creator,
-        &String::from_str(&env, "B"),
-        &String::from_str(&env, "d"),
+        &String::from_str(&env, "ref-B"),
+        &String::from_str(&env, "hashB"),
         &10,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
@@ -374,22 +364,20 @@ fn test_list_categories_with_id_gaps() {
 
     client.create_course(
         &creator,
-        &String::from_str(&env, "Course 1"),
-        &String::from_str(&env, "Desc"),
+        &String::from_str(&env, "ref-1"),
+        &String::from_str(&env, "hash1"),
         &10,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
     );
     client.create_course(
         &creator,
-        &String::from_str(&env, "Course 2"),
-        &String::from_str(&env, "Desc"),
+        &String::from_str(&env, "ref-2"),
+        &String::from_str(&env, "hash2"),
         &10,
         &Some(String::from_str(&env, "Data")),
-        &None,
         &None,
         &None,
         &None,
@@ -404,11 +392,10 @@ fn test_list_categories_with_id_gaps() {
     // Create course 3 (this will still have ID 3)
     client.create_course(
         &creator,
-        &String::from_str(&env, "Course 3"),
-        &String::from_str(&env, "Desc"),
+        &String::from_str(&env, "ref-3"),
+        &String::from_str(&env, "hash3"),
         &10,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
@@ -444,11 +431,10 @@ fn test_course_backup_and_recovery_system() {
     // Create test courses
     let _course1 = client.create_course(
         &instructor,
-        &String::from_str(&env, "Rust Programming"),
-        &String::from_str(&env, "Learn Rust from basics"),
+        &String::from_str(&env, "ref-rust-prog"),
+        &String::from_str(&env, "hash_rust_basics"),
         &1000_u128,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,
@@ -456,11 +442,10 @@ fn test_course_backup_and_recovery_system() {
 
     let _course2 = client.create_course(
         &instructor,
-        &String::from_str(&env, "Advanced Rust"),
-        &String::from_str(&env, "Advanced Rust concepts"),
+        &String::from_str(&env, "ref-adv-rust"),
+        &String::from_str(&env, "hash_adv_rust"),
         &1500_u128,
         &Some(String::from_str(&env, "Programming")),
-        &None,
         &None,
         &None,
         &None,

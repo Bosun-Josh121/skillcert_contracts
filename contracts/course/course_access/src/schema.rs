@@ -46,23 +46,16 @@ pub enum DataKey {
     CourseUsers(String),
 }
 
-/// Represents a user's profile information.
+/// on-chain user profile for the course_access contract.
 ///
-/// This struct contains all the personal and professional information
-/// that users can store on-chain as part of their profile.
+/// Stores only the user's blockchain address and an off-chain reference ID.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[contracttype]
 pub struct UserProfile {
-    /// The user's full name
-    pub name: String,
-    /// The user's email address
-    pub email: String,
-    /// Optional profession or job title
-    pub profession: Option<String>,
-    /// Optional learning goals or objectives
-    pub goals: Option<String>,
-    /// The user's country of residence
-    pub country: String,
+    /// The user's blockchain address
+    pub user: Address,
+    /// Off-chain reference ID (UUID mapping to DB record)
+    pub off_chain_ref_id: String,
 }
 
 /// Contains all users who have access to a specific course.

@@ -3,27 +3,20 @@
 
 use soroban_sdk::{contracttype, Address, String};
 
-/// User profile information with privacy controls.
+/// on-chain user profile.
 ///
-/// This struct represents a user's profile with optional privacy settings
-/// and timestamps for tracking creation and updates.
+/// Stores only the blockchain address and an off-chain reference ID
+/// that maps to the full user record in the off-chain database.
+/// All PII (name, email, country, etc.) is stored off-chain.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct UserProfile {
     /// User's blockchain address
     pub address: Address,
-    /// User's full name
-    pub name: String,
-    /// Optional email address (may be hidden for privacy)
-    pub email: Option<String>,
-    /// User's country of residence
-    pub country: String,
-    /// User's profession or job title
-    pub profession: String,
-    /// User's learning goals or objectives
-    pub goals: String,
-    /// Whether the profile is publicly viewable
-    pub privacy_public: bool,
+    /// Off-chain reference ID (UUID mapping to DB record)
+    pub off_chain_ref_id: String,
+    /// Optional DID hash for decentralized identity verification
+    pub did_hash: Option<String>,
     /// Timestamp when the profile was created
     pub created_at: u64,
     /// Timestamp when the profile was last updated

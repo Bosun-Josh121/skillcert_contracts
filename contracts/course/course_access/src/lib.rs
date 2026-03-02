@@ -15,14 +15,14 @@ mod test;
 
 use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
 
-use functions::{config::initialize,config::set_contract_addrs, grant_access::course_access_grant_access, revoke_access::course_access_revoke_access, revoke_all_access::revoke_all_access, save_profile::save_user_profile, list_user_courses::list_user_courses, list_course_access::course_access_list_course_access, contract_versioning::{is_version_compatible, get_migration_status, get_version_history, migrate_access_data}, transfer_course_access::transfer_course_access};
+use functions::{config::initialize, config::set_contract_addrs, grant_access::course_access_grant_access, revoke_access::course_access_revoke_access, revoke_all_access::revoke_all_access, save_profile::save_user_profile, list_user_courses::list_user_courses, list_course_access::course_access_list_course_access, contract_versioning::{is_version_compatible, get_migration_status, get_version_history, migrate_access_data}, transfer_course_access::transfer_course_access};
 use schema::{CourseUsers, UserCourses};
 
 /// Course Access Contract
 ///
 /// This contract manages user access to courses in the SkillCert platform.
 /// It provides functionality to grant, revoke, and query course access permissions,
-/// as well as manage user profiles.
+/// as well as store minimal on-chain user profiles (address + off-chain ref ID only).
 #[contract]
 pub struct CourseAccessContract;
 
@@ -163,65 +163,25 @@ impl CourseAccessContract {
         course_access_revoke_access(env, course_id, user)
     }
 
-    /// Save or update a user's profile on-chain.
+    /// Save or update a minimal on-chain user profile.
     ///
-    /// Stores user profile information in the contract storage.
-    /// This includes personal and professional information.
+    /// Stores only the user's address and an off-chain reference ID.
+    /// All PII (name, email, profession, goals, country) is stored off-chain.
     ///
     /// # Arguments
     ///
     /// * `env` - The Soroban environment
-    /// * `name` - The user's full name
-    /// * `email` - The user's email address
-    /// * `profession` - Optional profession/job title
-    /// * `goals` - Optional learning goals or objectives
-    /// * `country` - The user's country of residence
+    /// * `off_chain_ref_id` - UUID/hash mapping to the user's full record in the off-chain DB
     ///
     /// # Panics
     ///
-    /// * If name, email, or country are empty
-    /// * If email format is invalid
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// // Save user profile
-    /// contract.save_user_profile(
-    ///     env.clone(),
-    ///     "John Doe".try_into().unwrap(),
-    ///     "john@example.com".try_into().unwrap(),
-    ///     Some("Software Developer".try_into().unwrap()),
-    ///     Some("Learn Rust programming".try_into().unwrap()),
-    ///     "US".try_into().unwrap()
-    /// );
-    /// 
-    /// // Save minimal profile
-    /// contract.save_user_profile(
-    ///     env.clone(),
-    ///     "Jane Smith".try_into().unwrap(),
-    ///     "jane@example.com".try_into().unwrap(),
-    ///     None,
-    ///     None,
-    ///     "CA".try_into().unwrap()
-    /// );
-    /// ```
-    ///
-    /// # Edge Cases
-    ///
-    /// * **Empty required fields**: Name, email, and country cannot be empty
-    /// * **Invalid email**: Email must be in valid format
-    /// * **Profile updates**: Overwrites existing profile data
-    /// * **Optional fields**: Profession and goals can be None
+    /// * If off_chain_ref_id is empty
     pub fn save_user_profile(
         env: Env,
-        name: String,
-        email: String,
-        profession: Option<String>,
-        goals: Option<String>,
-        country: String,
+        off_chain_ref_id: String,
     ) {
         let user: Address = env.current_contract_address();
-        save_user_profile(env, name, email, profession, goals, country, user);
+        save_user_profile(env, off_chain_ref_id, user);
     }
 
     /// List all courses a user has access to.
@@ -463,7 +423,7 @@ impl CourseAccessContract {
         get_migration_status(&env)
     }
 
-    pub fn transfer_course(env: Env, course_id: String, from: Address, to: Address){
+    pub fn transfer_course(env: Env, course_id: String, from: Address, to: Address) {
         transfer_course_access(env, course_id, from, to)
     }
 }

@@ -5,38 +5,38 @@ use soroban_sdk::{symbol_short, Vec, vec, Address, Env, String, Symbol};
 
 use crate::functions::utils::{concat_strings, u32_to_string};
 use crate::error::{handle_error, Error};
-use crate::schema::{CourseModule};
+use crate::schema::CourseModule;
 
 const COURSE_KEY: Symbol = symbol_short!("course");
 const MODULE_KEY: Symbol = symbol_short!("module");
 
 const COURSE_REGISTRY_ADD_MODULE_EVENT: Symbol = symbol_short!("crsAddMod");
 
+/// Add a module to a course.
+///
+/// The caller provides a content_hash
+/// representing the SHA-256 hash of the off-chain module content for integrity verification.
 pub fn course_registry_add_module(
     env: Env,
     caller: Address,
     course_id: String,
     position: u32,
-    title: String,
+    content_hash: String,
 ) -> CourseModule {
     // Validate input parameters
     if course_id.is_empty() {
         handle_error(&env, Error::EmptyCourseId);
     }
-    
-    if title.is_empty() {
-        handle_error(&env, Error::InvalidModuleTitle);
+
+    if content_hash.is_empty() {
+        handle_error(&env, Error::ContentHashRequired);
     }
-    
+
     // Check string lengths to prevent extremely long values
     if course_id.len() > 100 {
         handle_error(&env, Error::EmptyCourseId);
     }
-    
-    if title.len() > 500 {
-        handle_error(&env, Error::InvalidModuleTitle);
-    }
-    
+
     // Validate position is reasonable (not extremely large)
     if position > 10000 {
         handle_error(&env, Error::InvalidModulePosition);
@@ -71,12 +71,12 @@ pub fn course_registry_add_module(
 
     let module_id: String = concat_strings(&env, arr);
 
-    // Create new module
+    // Create new module — lean on-chain record
     let module: CourseModule = CourseModule {
         id: module_id.clone(),
         course_id: course_id.clone(),
         position,
-        title: title.clone(),
+        content_hash: content_hash.clone(),
         created_at: env.ledger().timestamp(),
     };
 
@@ -86,9 +86,9 @@ pub fn course_registry_add_module(
     env.storage().persistent().set(&storage_key, &module);
     env.storage().persistent().set(&position_key, &true);
 
-    // emit an event
+    // emit an event — only essential blockchain data
     env.events()
-        .publish((COURSE_REGISTRY_ADD_MODULE_EVENT,), (caller, course_id, position, title));
+        .publish((COURSE_REGISTRY_ADD_MODULE_EVENT,), (caller, course_id, position, content_hash));
 
     module
 }
@@ -96,21 +96,20 @@ pub fn course_registry_add_module(
 #[cfg(test)]
 mod test {
     extern crate std;
-    
+
     use super::*;
     use crate::{schema::Course, CourseRegistry, CourseRegistryClient};
     use soroban_sdk::{testutils::Address as _, Address, Env};
 
     fn create_course<'a>(client: &CourseRegistryClient<'a>, creator: &Address) -> Course {
-        let title = String::from_str(&client.env, "title");
-        let description = String::from_str(&client.env, "description");
+        let off_chain_ref_id = String::from_str(&client.env, "ref_001");
+        let content_hash = String::from_str(&client.env, "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4");
         let price = 1000_u128;
         client.create_course(
-            &creator,
-            &title,
-            &description,
+            creator,
+            &off_chain_ref_id,
+            &content_hash,
             &price,
-            &None,
             &None,
             &None,
             &None,
@@ -138,10 +137,10 @@ mod test {
     fn setup_test_env() -> (Env, Address, Address, CourseRegistryClient<'static>) {
         let env = Env::default();
         env.mock_all_auths();
-        
+
         // Register mock user management contract
         let user_mgmt_id = env.register(mock_user_management::UserManagement, ());
-        
+
         let contract_id = env.register(CourseRegistry, ());
         let client = CourseRegistryClient::new(&env, &contract_id);
 
@@ -160,11 +159,12 @@ mod test {
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        let module = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 1"));
+        let content_hash = String::from_str(&env, "module_hash_aabbccddee1122334455");
+        let module = client.add_module(&creator, &course.id, &1, &content_hash);
 
         assert_eq!(module.course_id, course.id);
         assert_eq!(module.position, 1);
-        assert_eq!(module.title, String::from_str(&env, "Module 1"));
+        assert_eq!(module.content_hash, content_hash);
     }
 
     #[test]
@@ -173,12 +173,12 @@ mod test {
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        // Admin should be able to add modules
-        let module = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 1"));
+        let content_hash = String::from_str(&env, "module_hash_aabbccddee1122334455");
+        let module = client.add_module(&creator, &course.id, &1, &content_hash);
 
         assert_eq!(module.course_id, course.id);
         assert_eq!(module.position, 1);
-        assert_eq!(module.title, String::from_str(&env, "Module 1"));
+        assert_eq!(module.content_hash, content_hash);
     }
 
     #[test]
@@ -186,16 +186,14 @@ mod test {
     fn test_add_module_unauthorized() {
         let (env, _, _, client) = setup_test_env();
         let creator = Address::generate(&env);
-        let _unauthorized_user = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        // Unauthorized user should not be able to add modules
         let unauthorized_user = Address::generate(&env);
         client.add_module(
             &unauthorized_user,
             &course.id,
             &1,
-            &String::from_str(&env, "Module 1"),
+            &String::from_str(&env, "module_hash_aabbccddee1122334455"),
         );
     }
 
@@ -209,7 +207,7 @@ mod test {
             &unauthorized_user,
             &String::from_str(&env, "invalid_course"),
             &1,
-            &String::from_str(&env, "Module 1"),
+            &String::from_str(&env, "module_hash_aabbccddee1122334455"),
         );
     }
 
@@ -219,8 +217,18 @@ mod test {
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        let module1 = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 1"));
-        let module2 = client.add_module(&creator, &course.id, &2, &String::from_str(&env, "Module 2"));
+        let module1 = client.add_module(
+            &creator,
+            &course.id,
+            &1,
+            &String::from_str(&env, "hash_module_one_aabbccddeeff1122"),
+        );
+        let module2 = client.add_module(
+            &creator,
+            &course.id,
+            &2,
+            &String::from_str(&env, "hash_module_two_aabbccddeeff3344"),
+        );
 
         assert_ne!(module1.id, module2.id);
     }
@@ -231,7 +239,8 @@ mod test {
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        let module = client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 1"));
+        let content_hash = String::from_str(&env, "module_hash_aabbccddee1122334455");
+        let module = client.add_module(&creator, &course.id, &1, &content_hash);
 
         let exists: bool = env.as_contract(&contract_id, || {
             env.storage()
@@ -247,23 +256,27 @@ mod test {
     fn test_add_module_different_course_creator() {
         let (env, _, _, client) = setup_test_env();
         let creator1 = Address::generate(&env);
-        let _creator2 = Address::generate(&env);
-        
+
         let course1 = create_course(&client, &creator1);
-        
+
         // Creator2 should not be able to add module to Creator1's course
         let creator2 = Address::generate(&env);
-        client.add_module(&creator2, &course1.id, &1, &String::from_str(&env, "Module 1"));
+        client.add_module(
+            &creator2,
+            &course1.id,
+            &1,
+            &String::from_str(&env, "module_hash_aabbccddee1122334455"),
+        );
     }
 
     #[test]
     #[should_panic]
-    fn test_add_module_empty_title() {
+    fn test_add_module_empty_content_hash() {
         let (env, _, _admin, client) = setup_test_env();
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
-        // Should panic with validation error for empty title
+        // Should panic with validation error for empty content hash
         client.add_module(&creator, &course.id, &1, &String::from_str(&env, ""));
     }
 
@@ -274,10 +287,17 @@ mod test {
         let creator = Address::generate(&env);
         let course = create_course(&client, &creator);
 
+        let hash = String::from_str(&env, "module_hash_aabbccddee1122334455");
+
         // Add first module at position 1
-        client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 1"));
+        client.add_module(&creator, &course.id, &1, &hash);
 
         // Try to add another module at the same position
-        client.add_module(&creator, &course.id, &1, &String::from_str(&env, "Module 2"));
+        client.add_module(
+            &creator,
+            &course.id,
+            &1,
+            &String::from_str(&env, "different_hash_aabbccddee11223344"),
+        );
     }
 }

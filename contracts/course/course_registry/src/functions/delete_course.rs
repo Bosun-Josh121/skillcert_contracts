@@ -5,11 +5,10 @@ use soroban_sdk::{symbol_short, vec, Address, Env, String, Symbol, Vec};
 
 use crate::error::{handle_error, Error};
 use crate::schema::{Course, CourseModule};
-use crate::functions::utils::{concat_strings, to_lowercase, u32_to_string};
+use crate::functions::utils::{concat_strings, u32_to_string};
 
 const COURSE_KEY: Symbol = symbol_short!("course");
 const MODULE_KEY: Symbol = symbol_short!("module");
-const TITLE_KEY: Symbol = symbol_short!("title");
 
 const DELETE_COURSE_EVENT: Symbol = symbol_short!("delCourse");
 
@@ -38,10 +37,6 @@ pub fn delete_course(env: &Env, creator: Address, course_id: String) -> Result<(
 
     delete_course_modules(env, &course_id);
 
-    let lowercase_title: String = to_lowercase(env, &course.title);
-
-    let title_key: (Symbol, String) = (TITLE_KEY, lowercase_title);
-    env.storage().persistent().remove(&title_key);
     env.storage().persistent().remove(&course_storage_key);
 
     // emit an event
@@ -114,13 +109,11 @@ mod tests {
         let env = Env::default();
         env.mock_all_auths();
 
-        // Register mock user management contract
         let user_mgmt_id = env.register(mock_user_management::UserManagement, ());
 
         let contract_id = env.register(CourseRegistry, ());
         let client = CourseRegistryClient::new(&env, &contract_id);
 
-        // Setup admin
         let admin = Address::generate(&env);
         env.as_contract(&contract_id, || {
             crate::functions::access_control::initialize(&env, &admin, &user_mgmt_id);
@@ -144,12 +137,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -169,15 +161,13 @@ mod tests {
         let actual_creator: Address = Address::generate(&env);
         let someone_else: Address = Address::generate(&env);
 
-        // Create a course with actual_creator
         let course: Course = client.create_course(
             &actual_creator,
-            &String::from_str(&env, "Protected Course"),
-            &String::from_str(&env, "This course should only be deletable by its creator"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &500_u128,
             &Some(String::from_str(&env, "security")),
             &Some(String::from_str(&env, "english")),
-            &None,
             &None,
             &None,
         );
@@ -200,12 +190,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -234,12 +223,11 @@ mod tests {
 
         let new_course: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title"),
-            &String::from_str(&env, "description"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "abc123hash"),
             &1000_u128,
             &Some(String::from_str(&env, "category")),
             &Some(String::from_str(&env, "language")),
-            &Some(String::from_str(&env, "thumbnail_url")),
             &None,
             &None,
         );
@@ -248,7 +236,7 @@ mod tests {
             &creator,
             &new_course.id,
             &0,
-            &String::from_str(&env, "Module Title"),
+            &String::from_str(&env, "module_content_hash_001"),
         );
 
         let module_exists: bool = env.as_contract(&contract_id, || {
@@ -302,24 +290,22 @@ mod tests {
 
         let course1: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title1"),
-            &String::from_str(&env, "description1"),
+            &String::from_str(&env, "ref-001"),
+            &String::from_str(&env, "hash001"),
             &1000_u128,
             &Some(String::from_str(&env, "category1")),
             &Some(String::from_str(&env, "language1")),
-            &Some(String::from_str(&env, "thumbnail_url1")),
             &None,
             &None,
         );
 
         let course2: Course = client.create_course(
             &creator,
-            &String::from_str(&env, "title2"),
-            &String::from_str(&env, "description2"),
+            &String::from_str(&env, "ref-002"),
+            &String::from_str(&env, "hash002"),
             &1000_u128,
             &Some(String::from_str(&env, "category2")),
             &Some(String::from_str(&env, "language2")),
-            &Some(String::from_str(&env, "thumbnail_url2")),
             &None,
             &None,
         );

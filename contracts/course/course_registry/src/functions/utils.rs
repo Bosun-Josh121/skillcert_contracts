@@ -151,17 +151,15 @@ mod tests {
     fn create_test_course(env: &Env, id: &str) -> Course {
         Course {
             id: String::from_str(env, id),
-            title: String::from_str(env, "Test Course"),
-            description: String::from_str(env, "Test Description"),
+            off_chain_ref_id: String::from_str(env, "ref-test-001"),
+            content_hash: String::from_str(env, "sha256_test_content"),
             creator: Address::generate(env),
             price: crate::schema::DEFAULT_COURSE_PRICE,
             category: None,
             language: None,
-            thumbnail_url: None,
             published: false,
             prerequisites: Vec::new(&env),
             is_archived: false,
-
             duration_hours: Some(1),
             level: Some(String::from_str(env, "entry")),
         }
@@ -192,7 +190,6 @@ mod tests {
         let lowercase_result = to_lowercase(&env, &course_id);
         let trim_result = trim(&env, &course_id2);
 
-        // You can add assertions here if needed for testing
         assert!(!count.is_empty());
         assert!(!module_id.is_empty());
         assert!(!lowercase_result.is_empty());

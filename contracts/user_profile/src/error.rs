@@ -10,6 +10,7 @@ pub enum Error {
     UserProfileNotFound = 1,
     InvalidInput = 2,
     UnauthorizedAccess = 3,
+    OffChainRefIdRequired = 4,
 }
 
 pub fn handle_error(env: &Env, error: Error) -> ! {
